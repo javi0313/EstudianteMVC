@@ -10,245 +10,639 @@ import java.util.List;
 
 /**
  * Vista: JFrame principal del módulo Estudiante.
- * Contiene un campo de búsqueda y una tabla de resultados.
  *
- * IMPORTANTE (MVC): esta clase NO conoce ni importa el Modelo (Estudiante).
- * Solo trabaja con tipos genéricos (Object[], List<Object[]>) que el
- * Controlador le entrega ya preparados. Así la Vista queda desacoplada
- * del Modelo y toda la comunicación pasa por el Controlador.
+ * La Vista solamente se encarga de:
+ * - Mostrar componentes.
+ * - Capturar lo que escribe el usuario.
+ * - Llamar al Controlador.
+ * - Mostrar los resultados recibidos.
+ *
+ * La Vista NO contiene lógica de búsqueda ni de ordenamiento.
  */
 public class EstudianteView extends JFrame {
 
-    // ── Componentes UI ────────────────────────────────────────────────────────
+    // ── Componentes de búsqueda ─────────────────────────────────────────────
+
     private JTextField txtNombreBuscar;
-private JTextField txtNombre;
-private JTextField txtCarrera;
-private JTextField txtPromedio;
+    private JButton btnBuscar;
 
-private JButton btnBuscar;
-private JButton btnAgregar;
+    // ── Componentes para registrar estudiante ────────────────────────────────
 
-private JTable tblResultados;
-private DefaultTableModel modeloTabla;
-private JLabel lblEstado;
+    private JTextField txtNombre;
+    private JTextField txtCarrera;
+    private JTextField txtPromedio;
 
+    private JButton btnAgregar;
 
+    // ── Componentes para ordenar ─────────────────────────────────────────────
 
-    // ── Controlador ───────────────────────────────────────────────────────────
+    private JComboBox<String> comboOrdenar;
+    private JButton btnOrdenar;
+
+    // ── Tabla ────────────────────────────────────────────────────────────────
+
+    private JTable tblResultados;
+    private DefaultTableModel modeloTabla;
+
+    // ── Mensaje de estado ────────────────────────────────────────────────────
+
+    private JLabel lblEstado;
+
+    // ── Controlador ──────────────────────────────────────────────────────────
+
     private EstudianteController controlador;
 
-    // ── Constructor ───────────────────────────────────────────────────────────
+    // ── Constructor ──────────────────────────────────────────────────────────
 
     public EstudianteView() {
+
         initComponentes();
+
         initEventos();
     }
 
-    // ── Inicialización de componentes ─────────────────────────────────────────
+    // ── Inicialización de componentes ────────────────────────────────────────
 
     private void initComponentes() {
-    setTitle("Búsqueda de Estudiantes — MVC NetBeans");
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setSize(750, 500);
-    setLocationRelativeTo(null);
-    setLayout(new BorderLayout(10, 10));
 
-    Color verdeOliva = new Color(107, 142, 35);
+        setTitle(
+                "Búsqueda de Estudiantes — MVC NetBeans"
+        );
 
-    JPanel panelSuperior = new JPanel(new GridLayout(2, 1, 5, 5));
-    panelSuperior.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        setDefaultCloseOperation(
+                JFrame.EXIT_ON_CLOSE
+        );
 
-    JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-    panelBusqueda.setBorder(BorderFactory.createTitledBorder("Buscar estudiante"));
+        setSize(900, 600);
 
-    JLabel lblBuscar = new JLabel("Nombre:");
-    txtNombreBuscar = new JTextField(25);
+        setLocationRelativeTo(null);
 
-    btnBuscar = new JButton("Buscar");
-    btnBuscar.setBackground(verdeOliva);
-    btnBuscar.setForeground(Color.WHITE);
-    btnBuscar.setFocusPainted(false);
+        setLayout(
+                new BorderLayout(10, 10)
+        );
 
-    panelBusqueda.add(lblBuscar);
-    panelBusqueda.add(txtNombreBuscar);
-    panelBusqueda.add(btnBuscar);
+        // Color utilizado para los botones
 
-    JPanel panelAgregar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-    panelAgregar.setBorder(BorderFactory.createTitledBorder("Registrar nuevo estudiante"));
+        Color verdeOliva = new Color(
+                107,
+                142,
+                35
+        );
 
-    JLabel lblNombre = new JLabel("Nombre:");
-    txtNombre = new JTextField(15);
+        // =========================================================
+        // PANEL SUPERIOR
+        // =========================================================
 
-    JLabel lblCarrera = new JLabel("Carrera:");
-    txtCarrera = new JTextField(15);
+        JPanel panelSuperior = new JPanel();
 
-    JLabel lblPromedio = new JLabel("Promedio:");
-    txtPromedio = new JTextField(6);
+        panelSuperior.setLayout(
+                new BoxLayout(
+                        panelSuperior,
+                        BoxLayout.Y_AXIS
+                )
+        );
 
-    btnAgregar = new JButton("Agregar");
-    btnAgregar.setBackground(verdeOliva);
-    btnAgregar.setForeground(Color.WHITE);
-    btnAgregar.setFocusPainted(false);
+        panelSuperior.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5,
+                        10,
+                        5,
+                        10
+                )
+        );
 
-    panelAgregar.add(lblNombre);
-    panelAgregar.add(txtNombre);
-    panelAgregar.add(lblCarrera);
-    panelAgregar.add(txtCarrera);
-    panelAgregar.add(lblPromedio);
-    panelAgregar.add(txtPromedio);
-    panelAgregar.add(btnAgregar);
+        // =========================================================
+        // PANEL BUSCAR
+        // =========================================================
 
-    panelSuperior.add(panelBusqueda);
-    panelSuperior.add(panelAgregar);
+        JPanel panelBusqueda = new JPanel(
+                new FlowLayout(
+                        FlowLayout.LEFT,
+                        10,
+                        10
+                )
+        );
 
-    String[] columnas = {"ID", "Nombre", "Carrera", "Promedio"};
+        panelBusqueda.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Buscar estudiante"
+                )
+        );
 
-    modeloTabla = new DefaultTableModel(columnas, 0) {
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return false;
-        }
-    };
+        JLabel lblBuscar = new JLabel(
+                "Nombre:"
+        );
 
-    tblResultados = new JTable(modeloTabla);
-    tblResultados.setRowHeight(24);
-    tblResultados.getTableHeader().setReorderingAllowed(false);
-    tblResultados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        txtNombreBuscar = new JTextField(30);
 
-    JScrollPane scroll = new JScrollPane(tblResultados);
-    scroll.setBorder(BorderFactory.createTitledBorder("Resultados"));
+        btnBuscar = new JButton(
+                "Buscar"
+        );
 
-    lblEstado = new JLabel("Ingrese un nombre y presione Buscar.");
-    lblEstado.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
-    lblEstado.setForeground(verdeOliva);
+        btnBuscar.setBackground(
+                verdeOliva
+        );
 
-    add(panelSuperior, BorderLayout.NORTH);
-    add(scroll, BorderLayout.CENTER);
-    add(lblEstado, BorderLayout.SOUTH);
-}
+        btnBuscar.setForeground(
+                Color.WHITE
+        );
 
-    // ── Eventos ───────────────────────────────────────────────────────────────
+        btnBuscar.setFocusPainted(
+                false
+        );
+
+        panelBusqueda.add(
+                lblBuscar
+        );
+
+        panelBusqueda.add(
+                txtNombreBuscar
+        );
+
+        panelBusqueda.add(
+                btnBuscar
+        );
+
+        // =========================================================
+        // PANEL REGISTRAR
+        // =========================================================
+
+        JPanel panelAgregar = new JPanel(
+                new FlowLayout(
+                        FlowLayout.LEFT,
+                        10,
+                        10
+                )
+        );
+
+        panelAgregar.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Registrar nuevo estudiante"
+                )
+        );
+
+        JLabel lblNombre = new JLabel(
+                "Nombre:"
+        );
+
+        txtNombre = new JTextField(18);
+
+        JLabel lblCarrera = new JLabel(
+                "Carrera:"
+        );
+
+        txtCarrera = new JTextField(18);
+
+        JLabel lblPromedio = new JLabel(
+                "Promedio:"
+        );
+
+        txtPromedio = new JTextField(8);
+
+        btnAgregar = new JButton(
+                "Agregar"
+        );
+
+        btnAgregar.setBackground(
+                verdeOliva
+        );
+
+        btnAgregar.setForeground(
+                Color.WHITE
+        );
+
+        btnAgregar.setFocusPainted(
+                false
+        );
+
+        panelAgregar.add(
+                lblNombre
+        );
+
+        panelAgregar.add(
+                txtNombre
+        );
+
+        panelAgregar.add(
+                lblCarrera
+        );
+
+        panelAgregar.add(
+                txtCarrera
+        );
+
+        panelAgregar.add(
+                lblPromedio
+        );
+
+        panelAgregar.add(
+                txtPromedio
+        );
+
+        panelAgregar.add(
+                btnAgregar
+        );
+
+        // =========================================================
+        // PANEL ORDENAR
+        // =========================================================
+
+        JPanel panelOrdenar = new JPanel(
+                new FlowLayout(
+                        FlowLayout.LEFT,
+                        10,
+                        5
+                )
+        );
+
+        panelOrdenar.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Ordenar resultados"
+                )
+        );
+
+        JLabel lblOrdenar = new JLabel(
+                "Ordenar por:"
+        );
+
+        comboOrdenar = new JComboBox<>(
+                new String[]{
+                    "Nombre",
+                    "Promedio"
+                }
+        );
+
+        btnOrdenar = new JButton(
+                "Ordenar"
+        );
+
+        btnOrdenar.setBackground(
+                verdeOliva
+        );
+
+        btnOrdenar.setForeground(
+                Color.WHITE
+        );
+
+        btnOrdenar.setFocusPainted(
+                false
+        );
+
+        panelOrdenar.add(
+                lblOrdenar
+        );
+
+        panelOrdenar.add(
+                comboOrdenar
+        );
+
+        panelOrdenar.add(
+                btnOrdenar
+        );
+
+        // =========================================================
+        // AGREGAR PANELES AL PANEL SUPERIOR
+        // =========================================================
+
+        panelSuperior.add(
+                panelBusqueda
+        );
+
+        panelSuperior.add(
+                panelAgregar
+        );
+
+        panelSuperior.add(
+                panelOrdenar
+        );
+
+        // =========================================================
+        // TABLA
+        // =========================================================
+
+        String[] columnas = {
+            "ID",
+            "Nombre",
+            "Carrera",
+            "Promedio"
+        };
+
+        modeloTabla = new DefaultTableModel(
+                columnas,
+                0
+        ) {
+
+            @Override
+            public boolean isCellEditable(
+                    int row,
+                    int col) {
+
+                return false;
+            }
+        };
+
+        tblResultados = new JTable(
+                modeloTabla
+        );
+
+        tblResultados.setRowHeight(
+                24
+        );
+
+        tblResultados
+                .getTableHeader()
+                .setReorderingAllowed(
+                        false
+                );
+
+        tblResultados.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION
+        );
+
+        JScrollPane scroll = new JScrollPane(
+                tblResultados
+        );
+
+        scroll.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Resultados"
+                )
+        );
+
+        // =========================================================
+        // ESTADO
+        // =========================================================
+
+        lblEstado = new JLabel(
+                "Ingrese un nombre y presione Buscar."
+        );
+
+        lblEstado.setBorder(
+                BorderFactory.createEmptyBorder(
+                        4,
+                        10,
+                        4,
+                        10
+                )
+        );
+
+        lblEstado.setForeground(
+                verdeOliva
+        );
+
+        // =========================================================
+        // AGREGAR AL FRAME
+        // =========================================================
+
+        add(
+                panelSuperior,
+                BorderLayout.NORTH
+        );
+
+        add(
+                scroll,
+                BorderLayout.CENTER
+        );
+
+        add(
+                lblEstado,
+                BorderLayout.SOUTH
+        );
+    }
+
+    // ── Eventos ─────────────────────────────────────────────────────────────
 
     private void initEventos() {
 
-    btnBuscar.addActionListener((ActionEvent e) -> {
-        if (controlador != null) {
-            controlador.buscarEstudiante(
-                txtNombreBuscar.getText().trim()
-            );
-        }
-    });
+        // =========================================================
+        // BOTÓN BUSCAR
+        // =========================================================
 
-    txtNombreBuscar.addActionListener((ActionEvent e) -> btnBuscar.doClick());
+        btnBuscar.addActionListener(
+                (ActionEvent e) -> {
 
-    btnAgregar.addActionListener((ActionEvent e) -> {
+                    if (controlador != null) {
 
-        if (controlador != null) {
+                        controlador.buscarEstudiante(
+                                txtNombreBuscar
+                                        .getText()
+                                        .trim()
+                        );
+                    }
+                }
+        );
 
-            String nombre = txtNombre.getText().trim();
-            String carrera = txtCarrera.getText().trim();
+        // Permitir buscar presionando ENTER
 
-            double promedio;
+        txtNombreBuscar.addActionListener(
+                (ActionEvent e) ->
+                        btnBuscar.doClick()
+        );
 
-            try {
-                promedio = Double.parseDouble(
-                    txtPromedio.getText().trim()
-                );
-            } catch (NumberFormatException ex) {
-                mostrarError("El promedio debe ser un número válido.");
-                return;
-            }
+        // =========================================================
+        // BOTÓN AGREGAR
+        // =========================================================
 
-            controlador.agregarEstudiante(
-                nombre,
-                carrera,
-                promedio
-            );
-        }
-    });
-}
+        btnAgregar.addActionListener(
+                (ActionEvent e) -> {
 
-    // ── Métodos públicos que llama el Controlador ─────────────────────────────
-    // ninguno de estos métodos recibe un Estudiante: reciben
-    // Object[] / List<Object[]> ya armados, que es lo único que la Vista
-    // necesita saber para pintar la tabla.
+                    if (controlador != null) {
+
+                        String nombre =
+                                txtNombre
+                                        .getText()
+                                        .trim();
+
+                        String carrera =
+                                txtCarrera
+                                        .getText()
+                                        .trim();
+
+                        double promedio;
+
+                        try {
+
+                            promedio =
+                                    Double.parseDouble(
+                                            txtPromedio
+                                                    .getText()
+                                                    .trim()
+                                    );
+
+                        } catch (
+                                NumberFormatException ex) {
+
+                            mostrarError(
+                                    "El promedio debe ser "
+                                    + "un número válido."
+                            );
+
+                            return;
+                        }
+
+                        controlador.agregarEstudiante(
+                                nombre,
+                                carrera,
+                                promedio
+                        );
+                    }
+                }
+        );
+
+        // =========================================================
+        // BOTÓN ORDENAR
+        // =========================================================
+
+        btnOrdenar.addActionListener(
+                (ActionEvent e) -> {
+
+                    if (controlador != null) {
+
+                        String criterio =
+                                comboOrdenar
+                                        .getSelectedItem()
+                                        .toString();
+
+                        controlador.ordenarPor(
+                                criterio
+                        );
+                    }
+                }
+        );
+    }
+
+    // ── Métodos que utiliza el Controlador ───────────────────────────────────
 
     /**
-     * Muestra una única fila en la tabla.
-     * @param fila arreglo con {id, nombre, carrera, promedioFormateado}
+     * Muestra un único estudiante.
      */
-    public void mostrarEstudiante(Object[] fila) {
+    public void mostrarEstudiante(
+            Object[] fila) {
+
         limpiarTabla();
+
         agregarFila(fila);
-        setEstado("Se encontró 1 estudiante.");
+
+        setEstado(
+                "Se encontró 1 estudiante."
+        );
     }
 
     /**
-     * Muestra varias filas en la tabla.
-     * @param filas lista de arreglos {id, nombre, carrera, promedioFormateado}
+     * Muestra varios estudiantes.
      */
-    public void mostrarEstudiantes(List<Object[]> filas) {
+    public void mostrarEstudiantes(
+            List<Object[]> filas) {
+
         limpiarTabla();
-        if (filas == null || filas.isEmpty()) {
-            setEstado("No se encontraron estudiantes con ese criterio.");
+
+        if (filas == null
+                || filas.isEmpty()) {
+
+            setEstado(
+                    "No se encontraron estudiantes "
+                    + "con ese criterio."
+            );
+
             return;
         }
+
         for (Object[] fila : filas) {
+
             agregarFila(fila);
         }
-        setEstado("Se encontraron " + filas.size() + " estudiante(s).");
+
+        setEstado(
+                "Se encontraron "
+                + filas.size()
+                + " estudiante(s)."
+        );
     }
 
     /**
-     * Muestra un mensaje de error en la barra de estado.
+     * Muestra un mensaje de error.
      */
-    public void mostrarError(String mensaje) {
-        JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
-        setEstado("Error: " + mensaje);
-    }
-    
-    public void mostrarConfirmacion(String mensaje) {
-    JOptionPane.showMessageDialog(
-        this,
-        mensaje,
-        "Registro exitoso",
-        JOptionPane.INFORMATION_MESSAGE
-    );
+    public void mostrarError(
+            String mensaje) {
 
-    setEstado(mensaje);
-}
-    
-    public void limpiarFormulario() {
-    txtNombre.setText("");
-    txtCarrera.setText("");
-    txtPromedio.setText("");
-    txtNombre.requestFocus();
-}
+        JOptionPane.showMessageDialog(
+                this,
+                mensaje,
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+
+        setEstado(
+                "Error: " + mensaje
+        );
+    }
 
     /**
-     * Devuelve el texto ingresado en el campo de nombre.
+     * Muestra una confirmación.
+     */
+    public void mostrarConfirmacion(
+            String mensaje) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                mensaje,
+                "Registro exitoso",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        setEstado(
+                mensaje
+        );
+    }
+
+    /**
+     * Limpia el formulario de registro.
+     */
+    public void limpiarFormulario() {
+
+        txtNombre.setText("");
+
+        txtCarrera.setText("");
+
+        txtPromedio.setText("");
+
+        txtNombre.requestFocus();
+    }
+
+    /**
+     * Devuelve el nombre escrito en el campo de búsqueda.
      */
     public String getNombreBuscado() {
-        return txtNombre.getText().trim();
+
+        return txtNombreBuscar
+                .getText()
+                .trim();
     }
 
-    // ── Setter del controlador ────────────────────────────────────────────────
+    // ── Setter del Controlador ───────────────────────────────────────────────
 
-    public void setControlador(EstudianteController controlador) {
+    public void setControlador(
+            EstudianteController controlador) {
+
         this.controlador = controlador;
     }
 
-    // ── Helpers privados ──────────────────────────────────────────────────────
+    // ── Métodos auxiliares ──────────────────────────────────────────────────
 
-    private void agregarFila(Object[] fila) {
+    private void agregarFila(
+            Object[] fila) {
+
         modeloTabla.addRow(fila);
     }
 
     private void limpiarTabla() {
+
         modeloTabla.setRowCount(0);
     }
 
-    private void setEstado(String texto) {
+    private void setEstado(
+            String texto) {
+
         lblEstado.setText(texto);
     }
 }
