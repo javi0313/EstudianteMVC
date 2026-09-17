@@ -24,7 +24,8 @@ public class EstudianteView extends JFrame {
     // ── Componentes de búsqueda ─────────────────────────────────────────────
 
     private JTextField txtNombreBuscar;
-    private JButton btnBuscar;
+private JButton btnBuscar;
+private JButton btnMostrarTodos;
 
     // ── Componentes para registrar estudiante ────────────────────────────────
 
@@ -148,20 +149,40 @@ public class EstudianteView extends JFrame {
         );
 
         btnBuscar.setFocusPainted(
-                false
-        );
+        false
+);
 
-        panelBusqueda.add(
-                lblBuscar
-        );
+btnMostrarTodos = new JButton(
+        "Mostrar todos"
+);
+
+btnMostrarTodos.setBackground(
+        verdeOliva
+);
+
+btnMostrarTodos.setForeground(
+        Color.WHITE
+);
+
+btnMostrarTodos.setFocusPainted(
+        false
+);
+
+panelBusqueda.add(
+        lblBuscar
+);
 
         panelBusqueda.add(
                 txtNombreBuscar
         );
 
-        panelBusqueda.add(
-                btnBuscar
-        );
+       panelBusqueda.add(
+        btnBuscar
+);
+
+panelBusqueda.add(
+        btnMostrarTodos
+);
 
         // =========================================================
         // PANEL REGISTRAR
@@ -431,6 +452,16 @@ public class EstudianteView extends JFrame {
                     }
                 }
         );
+        
+        btnMostrarTodos.addActionListener(
+        (ActionEvent e) -> {
+
+            if (controlador != null) {
+
+                controlador.mostrarTodos();
+            }
+        }
+);
 
         // Permitir buscar presionando ENTER
 

@@ -7,37 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
 
-/**
- * Controlador: gestiona la lógica entre la Vista y el Modelo.
- *
- * El Controlador es el encargado de:
- * - Buscar estudiantes.
- * - Agregar estudiantes.
- * - Guardar los últimos resultados mostrados.
- * - Ordenar por nombre o promedio.
- * - Alternar entre orden ascendente y descendente.
- *
- * La Vista no conoce directamente al Modelo.
- */
 public class EstudianteController {
-
-    // ── Vista ────────────────────────────────────────────────────────────────
 
     private EstudianteView vista;
 
-    // ── Array de estudiantes ────────────────────────────────────────────────
-
     private ArrayList<Estudiante> estudiantes;
-
-    // ── Últimos resultados mostrados ─────────────────────────────────────────
 
     private List<Estudiante> ultimosResultados;
 
-    // ── Control del orden ascendente / descendente ───────────────────────────
-
     private boolean ordenAscendente = true;
-
-    // ── Constructor ─────────────────────────────────────────────────────────
 
     public EstudianteController(EstudianteView vista) {
 
@@ -47,8 +25,6 @@ public class EstudianteController {
 
         cargarDatos();
     }
-
-    // ── Carga de datos iniciales ─────────────────────────────────────────────
 
     private void cargarDatos() {
 
@@ -165,11 +141,7 @@ public class EstudianteController {
         );
     }
 
-    // ── Búsqueda de estudiantes ─────────────────────────────────────────────
-
     public void buscarEstudiante(String criterio) {
-
-        // Validar que el usuario haya escrito algo
 
         if (criterio == null || criterio.isEmpty()) {
 
@@ -180,13 +152,9 @@ public class EstudianteController {
             return;
         }
 
-        // Lista donde guardaremos los resultados
-
         List<Estudiante> resultados = new ArrayList<>();
 
         String criterioBajo = criterio.toLowerCase();
-
-        // Recorrer todos los estudiantes
 
         for (Estudiante e : estudiantes) {
 
@@ -196,15 +164,9 @@ public class EstudianteController {
             }
         }
 
-        // Guardamos los últimos resultados encontrados
-
         ultimosResultados = new ArrayList<>(resultados);
 
-        // Una nueva búsqueda comienza nuevamente en ascendente
-
         ordenAscendente = true;
-
-        // Mostrar resultados
 
         if (resultados.isEmpty()) {
 
@@ -226,14 +188,21 @@ public class EstudianteController {
         }
     }
 
-    // ── Agregar estudiante ──────────────────────────────────────────────────
+    public void mostrarTodos() {
+
+        ultimosResultados = new ArrayList<>(estudiantes);
+
+        ordenAscendente = true;
+
+        vista.mostrarEstudiantes(
+                convertirAFilas(ultimosResultados)
+        );
+    }
 
     public void agregarEstudiante(
             String nombre,
             String carrera,
             double promedio) {
-
-        // Validar nombre
 
         if (nombre == null || nombre.trim().isEmpty()) {
 
@@ -244,8 +213,6 @@ public class EstudianteController {
             return;
         }
 
-        // Validar promedio
-
         if (promedio < 0.0 || promedio > 5.0) {
 
             vista.mostrarError(
@@ -255,11 +222,7 @@ public class EstudianteController {
             return;
         }
 
-        // Crear nuevo ID
-
         int nuevoId = estudiantes.size() + 1;
-
-        // Crear estudiante
 
         Estudiante nuevoEstudiante = new Estudiante(
                 nuevoId,
@@ -268,11 +231,7 @@ public class EstudianteController {
                 promedio
         );
 
-        // Agregar al ArrayList
-
         estudiantes.add(nuevoEstudiante);
-
-        // Mostrar confirmación
 
         vista.mostrarConfirmacion(
                 "El estudiante "
@@ -280,11 +239,7 @@ public class EstudianteController {
                 + " fue agregado correctamente."
         );
 
-        // Limpiar formulario
-
         vista.limpiarFormulario();
-
-        // Mostrar todos los estudiantes
 
         ultimosResultados = new ArrayList<>(estudiantes);
 
@@ -295,35 +250,20 @@ public class EstudianteController {
         );
     }
 
-    // ── Ordenar resultados ──────────────────────────────────────────────────
-
-    /**
-     * Ordena los últimos resultados mostrados.
-     *
-     * @param criterio puede ser "Nombre" o "Promedio"
-     */
     public void ordenarPor(String criterio) {
-
-        // Verificar si existen resultados anteriores
 
         if (ultimosResultados == null
                 || ultimosResultados.isEmpty()) {
 
             vista.mostrarError(
                     "No hay resultados para ordenar. "
-                    + "Primero realice una búsqueda."
+                    + "Primero presione Mostrar todos o realice una búsqueda."
             );
 
             return;
         }
 
-        // Crear Comparator
-
         Comparator<Estudiante> comparador;
-
-        // ─────────────────────────────────────────────────────────
-        // ORDENAR POR NOMBRE
-        // ─────────────────────────────────────────────────────────
 
         if (criterio.equals("Nombre")) {
 
@@ -332,19 +272,11 @@ public class EstudianteController {
                     String.CASE_INSENSITIVE_ORDER
             );
 
-        // ─────────────────────────────────────────────────────────
-        // ORDENAR POR PROMEDIO
-        // ─────────────────────────────────────────────────────────
-
         } else if (criterio.equals("Promedio")) {
 
             comparador = Comparator.comparingDouble(
                     Estudiante::getPromedio
             );
-
-        // ─────────────────────────────────────────────────────────
-        // CRITERIO NO VÁLIDO
-        // ─────────────────────────────────────────────────────────
 
         } else {
 
@@ -355,31 +287,19 @@ public class EstudianteController {
             return;
         }
 
-        // ─────────────────────────────────────────────────────────
-        // ASCENDENTE / DESCENDENTE
-        // ─────────────────────────────────────────────────────────
-
         if (!ordenAscendente) {
 
             comparador = comparador.reversed();
         }
 
-        // Aplicar ordenamiento
-
         ultimosResultados.sort(comparador);
-
-        // Mostrar nuevamente los resultados ordenados
 
         vista.mostrarEstudiantes(
                 convertirAFilas(ultimosResultados)
         );
 
-        // Cambiar el sentido para el próximo clic
-
         ordenAscendente = !ordenAscendente;
     }
-
-    // ── Convertir Estudiante → fila ──────────────────────────────────────────
 
     private Object[] convertirAFila(Estudiante e) {
 
@@ -393,8 +313,6 @@ public class EstudianteController {
             )
         };
     }
-
-    // ── Convertir lista de Estudiante → filas ───────────────────────────────
 
     private List<Object[]> convertirAFilas(
             List<Estudiante> lista) {
